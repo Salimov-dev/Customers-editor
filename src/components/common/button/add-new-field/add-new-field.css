@@ -1,0 +1,15 @@
+.add-new-field {
+  width: 100%;
+  padding: 0 3rem;
+  border: 1px dashed gray;
+  background: none;
+}
+
+.add-new-field:hover {
+  background: rgba(124, 250, 112, 0.479);
+}
+
+.add-new-field__icon {
+  padding: 0.1rem 1rem 0 0;
+  font-size: 1.5rem;
+}

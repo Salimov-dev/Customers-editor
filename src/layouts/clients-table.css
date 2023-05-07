@@ -1,0 +1,8 @@
+table tr:last-child td {
+  border-bottom: none;
+}
+
+.table-hover tbody tr:hover td,
+.table-hover tbody tr:hover th {
+  background-color: rgba(167, 247, 167, 0.336);
+}

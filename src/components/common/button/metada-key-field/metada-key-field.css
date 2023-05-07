@@ -1,0 +1,18 @@
+.remove-new-field {
+  /* width: 100%; */
+  padding: 0 3rem;
+  margin: 0 0 0 3rem;
+  border: 1px dashed gray;
+  background: none;
+  color: red;
+}
+
+.remove-new-field:hover {
+  background-color: rgba(255, 0, 0, 0.205);
+}
+
+.remove-new-field__icon {
+  padding: 0.1rem 1rem 0 0;
+  font-size: 1.5rem;
+}
+
