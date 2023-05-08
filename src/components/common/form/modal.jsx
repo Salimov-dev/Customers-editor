@@ -5,9 +5,9 @@ const Modal = ({ header, component, id }) => {
     <div className="modal fade" id={id} tabIndex="-1" aria-hidden="true">
       <div className="modal-dialog modal-lg">
         <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">{header}</h5>
-          </div>
+         
+            <h5 className="modal-title p-3">{header}</h5>
+        
           <div className="modal-body">{component}</div>
         </div>
       </div>

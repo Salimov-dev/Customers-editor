@@ -12,11 +12,11 @@ import CopyToClipboardId from "../components/UI/table/helpers/copy-to-clipboard-
 // components
 import Table from "../components/common/table/table";
 import Button from "../components/common/button/buttons";
-import CheckBox from "../common/form/checkbox";
-import SearchField from "../common/form/search-field";
-import Modal from "../common/form/modal";
+import CheckBox from "../components/common/form/checkbox";
 import CreateCustomer from "../components/UI/page/create-customer/create-customer";
 import EditCustomer from "../components/UI/page/edit-customer/edit-customer";
+import Modal from "../components/common/form/modal";
+import SearchField from "../components/common/form/search-field";
 
 const ClientsTable = () => {
   const [sortBy, setSortBy] = useState({ path: "name", order: "asc" });
@@ -152,9 +152,9 @@ const ClientsTable = () => {
       />
 
       <Modal
-        header="Добавить клиента"
+        header="Редактировать клиента"
         id="editCustomer"
-        component={<EditCustomer id={selectedCustomers[0]}/>}
+        component={<EditCustomer id={selectedCustomers[0]} />}
       />
 
       <Table

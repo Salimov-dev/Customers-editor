@@ -65,7 +65,7 @@ const schema = yup.object().shape({
 
 const EditCustomer = ({ id }) => {
   const editedCustomer = useSelector(getCustomerById(id));
-  // console.log("editedCustomer", editedCustomer);
+
   const form = useForm({
     defaultValues: {
       name: "",

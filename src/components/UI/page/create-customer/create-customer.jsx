@@ -20,7 +20,6 @@ import Button from "../../../common/button/buttons";
 // store
 import { createCustomer } from "../../../../store/customer.store";
 
-
 const schema = yup.object().shape({
   name: yup
     .string()
@@ -97,7 +96,7 @@ const CreateCustomer = () => {
     resolver: yupResolver(schema),
   });
 
-  const { register, control, handleSubmit, formState } = form;
+  const { register, control, handleSubmit, formState, reset } = form;
   const dispatch = useDispatch();
   const { errors } = formState;
 
@@ -128,7 +127,8 @@ const CreateCustomer = () => {
     control,
   });
 
-  const dateNow = dayjs().format("YYYY-MM-DD");
+  const dateNow = dayjs().format("YYYY-MM-DD hh:mm");
+  console.log(dateNow);
 
   const transformData = (data) => {
     const newCustomer = {
@@ -144,6 +144,10 @@ const CreateCustomer = () => {
     console.log("data", data);
     dispatch(createCustomer(transformData(data)));
   };
+
+  const handleCloseModal = () => {
+    reset()
+  }
 
   return (
     <>
@@ -523,6 +527,7 @@ const CreateCustomer = () => {
             text="Закрыть"
             styleBtn="danger"
             dataBsDismiss="modal"
+            onClick={handleCloseModal}
           />
         </div>
       </form>
