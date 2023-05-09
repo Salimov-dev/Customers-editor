@@ -6,6 +6,10 @@ import _ from "lodash";
 import { useDispatch, useSelector } from "react-redux";
 // store
 import { getCustomers, removeCustomers } from "../store/customer.store";
+import {
+  getSelectedCustomers,
+  selectCustomers,
+} from "../store/selected-customers.store";
 // UI
 import TableDate from "../components/UI/table/helpers/table-date";
 import CopyToClipboardId from "../components/UI/table/helpers/copy-to-clipboard-id";
@@ -17,10 +21,11 @@ import CreateCustomer from "../components/UI/page/create-customer/create-custome
 import EditCustomer from "../components/UI/page/edit-customer/edit-customer";
 import Modal from "../components/common/form/modal";
 import SearchField from "../components/common/form/search-field";
+import DataDigitalSeparator from "../components/UI/table/helpers/data-digital-separator";
 
 const ClientsTable = () => {
   const [sortBy, setSortBy] = useState({ path: "name", order: "asc" });
-  const [selectedCustomers, setSelectedCustomers] = useState([]);
+  const selectedCustomers = useSelector(getSelectedCustomers());
   const [searchQuery, setSearchQuery] = useState();
   const customers = useSelector(getCustomers());
   const dispatch = useDispatch();
@@ -40,7 +45,11 @@ const ClientsTable = () => {
       path: "name",
       name: "Имя",
     },
-    education: {
+    org: {
+      path: "org.name",
+      name: "Организация",
+    },
+    id: {
       path: "id",
       name: "ID",
       component: (customer) => <CopyToClipboardId id={customer?._id} />,
@@ -51,7 +60,14 @@ const ClientsTable = () => {
     },
     deferralDays: {
       path: "balance.available_amount",
-      name: "Отсрочка оплаты",
+      name: "Отсрочка",
+    },
+    creditLimit: {
+      path: "balance.credit_limit",
+      name: "Лимит",
+      component: (customer) => (
+        <DataDigitalSeparator data={customer?.balance.credit_limit} />
+      ),
     },
     createdAt: {
       path: "created_at",
@@ -84,18 +100,13 @@ const ClientsTable = () => {
   };
 
   const handleSelectCustomers = (id) => {
-    if (!selectedCustomers.includes(id)) {
-      setSelectedCustomers([...selectedCustomers, id]);
-    } else {
-      return setSelectedCustomers(selectedCustomers.filter((el) => el !== id));
-    }
+    dispatch(selectCustomers(id));
   };
 
   const handleDeleteCustomer = () => {
     for (let i = 0; i <= selectedCustomers.length; i++) {
       dispatch(removeCustomers(selectedCustomers[i]));
     }
-    setSelectedCustomers([]);
   };
 
   const handleChange = ({ target }) => {

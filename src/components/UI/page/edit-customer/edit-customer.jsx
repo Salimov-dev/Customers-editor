@@ -7,8 +7,6 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { DevTool } from "@hookform/devtools";
 import * as yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
-import { nanoid } from "nanoid";
-import dayjs from "dayjs";
 // components
 import RemoveNewField from "../../../common/button/remove-new-field/remove-new-field";
 import MetadaKeyField from "../../../common/button/metada-key-field/metada-key-field";
@@ -17,9 +15,13 @@ import InputFieldRemovable from "../../../common/form/input-field-removable";
 import AddNewField from "../../../common/button/add-new-field/add-new-field";
 import InputField from "../../../common/form/input-field";
 import Button from "../../../common/button/buttons";
-import { getCustomerById } from "../../../../store/customer.store";
+import Switcher from "../../../common/form/switcher";
 // store
+import { getCustomerById } from "../../../../store/customer.store";
 import { updateCustomer } from "../../../../store/customer.store";
+import DateNow from "../../../../utils/date-now";
+// utils
+import AccordeonInitialState from "../../../../utils/accordeon-initial-state";
 
 const schema = yup.object().shape({
   name: yup
@@ -67,45 +69,18 @@ const EditCustomer = ({ id }) => {
   const editedCustomer = useSelector(getCustomerById(id));
 
   const form = useForm({
-    defaultValues: {
-      name: "",
-      email: "",
-      org: {
-        name: "",
-        inn: "",
-        kpp: "",
-        ogrn: "",
-        addr: "",
-        bank_accounts: [
-          {
-            name: "",
-            bik: "",
-            account_number: "",
-            corr_account_number: "",
-            is_default: true,
-          },
-        ],
-      },
-      balance: {
-        currency: "RUB",
-        current_amount: 0,
-        credit_limit: "",
-        available_amount: "",
-      },
-      invoice_emails: [{ email: "" }],
-      metadata: [{ keyName: "", keyValue: "" }],
-    },
+    defaultValues: "",
     mode: "all",
     resolver: yupResolver(schema),
   });
 
-  useEffect(() => {
-    setValue("name", editedCustomer?.name);
-  }, [editedCustomer?.name]);
-
-  const { register, control, handleSubmit, formState, setValue } = form;
+  const { register, control, handleSubmit, formState, reset } = form;
   const dispatch = useDispatch();
-  const { errors } = formState;
+  const { errors, isValid } = formState;
+
+  useEffect(() => {
+    reset(editedCustomer);
+  }, [editedCustomer]);
 
   const {
     fields: fieldInvoiceEmails,
@@ -134,19 +109,26 @@ const EditCustomer = ({ id }) => {
     control,
   });
 
-  const dateNow = dayjs().format("YYYY-MM-DD");
-
   const transformData = (data) => {
     const newCustomer = {
       ...data,
-      updated_at: dateNow,
+      updated_at: DateNow(),
     };
     return newCustomer;
   };
 
   const onSubmit = (data) => {
-    console.log("data", data);
     dispatch(updateCustomer(id, transformData(data)));
+  };
+
+  const editCustomerModal = document.getElementById("editCustomer");
+  editCustomerModal?.addEventListener("hidden.bs.modal", function () {
+    AccordeonInitialState();
+    reset();
+  });
+
+  const handleAccordeonInitialState = () => {
+    AccordeonInitialState();
   };
 
   return (
@@ -154,9 +136,9 @@ const EditCustomer = ({ id }) => {
       <form
         onSubmit={handleSubmit(onSubmit)}
         noValidate
-        className="edit-customer__form"
+        className="create-customer__form"
       >
-        <div className="accordion" id="accordionExample">
+        <div className="accordion" id="accordionCreate">
           <div className="accordion-item">
             <h2 className="accordion-header" id="clientDetail">
               <button
@@ -174,7 +156,7 @@ const EditCustomer = ({ id }) => {
               id="collapseClientDetail"
               className="accordion-collapse collapse show"
               aria-labelledby="clientDetail"
-              data-bs-parent="#accordionExample"
+              data-bs-parent="#accordionCreate"
             >
               <div className="accordion-body">
                 <InputField
@@ -236,7 +218,7 @@ const EditCustomer = ({ id }) => {
               id="collapseOrganizationDetail"
               className="accordion-collapse collapse"
               aria-labelledby="organizationDetail"
-              data-bs-parent="#accordionExample"
+              data-bs-parent="#accordionCreate"
             >
               <div className="accordion-body">
                 <InputField
@@ -307,7 +289,7 @@ const EditCustomer = ({ id }) => {
               id="collapseBankAccounts"
               className="accordion-collapse collapse"
               aria-labelledby="bankAccounts"
-              data-bs-parent="#accordionExample"
+              data-bs-parent="#accordionCreate"
             >
               <div className="accordion-body">
                 {fieldBankAccounts.map((field, index) => {
@@ -319,11 +301,19 @@ const EditCustomer = ({ id }) => {
                             {...register(`org.bank_accounts.${index}.name`)}
                             name={`org.bank_accounts.${index}.name`}
                             register={register}
+                            type="text"
                             label="Название счета"
                             placeholder="Введите название счета"
-                            error={!!errors?.org?.bank_accounts[index]?.name}
+                            error={
+                              !!errors?.org?.bank_accounts
+                                ? !!errors?.org?.bank_accounts[index]?.name
+                                : ""
+                            }
                             errorMessage={
-                              errors?.org?.bank_accounts[index]?.name?.message
+                              !!errors?.org?.bank_accounts
+                                ? errors?.org?.bank_accounts[index]?.name
+                                    ?.message
+                                : ""
                             }
                           />
                           <InputField
@@ -336,12 +326,16 @@ const EditCustomer = ({ id }) => {
                             label="Номер счета"
                             placeholder="Введите номер счета"
                             error={
-                              !!errors?.org?.bank_accounts[index]
-                                ?.account_number
+                              !!errors?.org?.bank_accounts
+                                ? !!errors?.org?.bank_accounts[index]
+                                    ?.account_number
+                                : ""
                             }
                             errorMessage={
-                              errors?.org?.bank_accounts[index]?.account_number
-                                ?.message
+                              !!errors?.org?.bank_accounts
+                                ? errors?.org?.bank_accounts[index]
+                                    ?.account_number?.message
+                                : ""
                             }
                           />
                           <InputField
@@ -351,9 +345,16 @@ const EditCustomer = ({ id }) => {
                             type="number"
                             label="БИК счета"
                             placeholder="Введите БИК счета"
-                            error={!!errors?.org?.bank_accounts[index]?.bik}
+                            error={
+                              !!errors?.org?.bank_accounts
+                                ? !!errors?.org?.bank_accounts[index]?.bik
+                                : ""
+                            }
                             errorMessage={
-                              errors?.org?.bank_accounts[index]?.bik?.message
+                              !!errors?.org?.bank_accounts
+                                ? errors?.org?.bank_accounts[index]?.bik
+                                    ?.message
+                                : ""
                             }
                           />
                           <InputField
@@ -366,13 +367,26 @@ const EditCustomer = ({ id }) => {
                             label="Корр. номер счета"
                             placeholder="Введите коореспондентский номер счета"
                             error={
-                              !!errors?.org?.bank_accounts[index]
-                                ?.corr_account_number
+                              !!errors?.org?.bank_accounts
+                                ? !!errors?.org?.bank_accounts[index]
+                                    ?.corr_account_number
+                                : ""
                             }
                             errorMessage={
-                              errors?.org?.bank_accounts[index]
-                                ?.corr_account_number?.message
+                              !!errors?.org?.bank_accounts
+                                ? errors?.org?.bank_accounts[index]
+                                    ?.corr_account_number?.message
+                                : ""
                             }
+                          />
+                          <Switcher
+                            {...register(
+                              `org.bank_accounts.${index}.is_default`
+                            )}
+                            name={`org.bank_accounts.${index}.is_default`}
+                            register={register}
+                            label="Дефолтный счёт"
+                            checked={false}
                           />
                         </div>
 
@@ -412,7 +426,7 @@ const EditCustomer = ({ id }) => {
               id="collapseInvoiceEmails"
               className="accordion-collapse collapse"
               aria-labelledby="invoiceEmails"
-              data-bs-parent="#accordionExample"
+              data-bs-parent="#accordionCreate"
             >
               <div className="accordion-body">
                 {fieldInvoiceEmails.map((field, index) => {
@@ -429,12 +443,14 @@ const EditCustomer = ({ id }) => {
                       key={index}
                       onClick={() => removeInvoiceEmails(index)}
                       error={
-                        errors?.invoice_emails?.length &&
-                        !!errors?.invoice_emails[index]?.email
+                        errors?.invoice_emails
+                          ? !!errors?.invoice_emails[index]?.email
+                          : ""
                       }
                       errorMessage={
-                        errors?.invoice_emails?.length &&
-                        errors?.invoice_emails[index]?.email?.message
+                        errors?.invoice_emails
+                          ? errors?.invoice_emails[index]?.email?.message
+                          : ""
                       }
                     />
                   );
@@ -463,7 +479,7 @@ const EditCustomer = ({ id }) => {
               id="collapseMeta"
               className="accordion-collapse collapse"
               aria-labelledby="meta"
-              data-bs-parent="#accordionExample"
+              data-bs-parent="#accordionCreate"
             >
               <div className="accordion-body">
                 <table className="table table-bordered border-secondary">
@@ -502,7 +518,7 @@ const EditCustomer = ({ id }) => {
                               key={index}
                             />
                           </td>
-                          <td className="edit-customer__delete-td">
+                          <td className="create-customer__delete-td">
                             <DeleteButton
                               onClick={() => removeMetaData(index)}
                             />
@@ -520,13 +536,22 @@ const EditCustomer = ({ id }) => {
             </div>
           </div>
         </div>
+
         <div className="d-flex justify-content-between pt-2 gap-1">
-          <Button type="submit" text="Сохранить" styleBtn="primary" />
+          <Button
+            type="submit"
+            text="Сохранить"
+            styleBtn="primary"
+            dataBsDismiss="modal"
+            onClick={handleAccordeonInitialState}
+            disabled={!isValid}
+          />
           <Button
             type="button"
             text="Закрыть"
             styleBtn="danger"
             dataBsDismiss="modal"
+            onClick={handleAccordeonInitialState}
           />
         </div>
       </form>

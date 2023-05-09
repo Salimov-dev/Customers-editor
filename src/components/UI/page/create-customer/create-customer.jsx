@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 // styles
 import "./create-customer.css";
 // libraries
@@ -8,7 +8,6 @@ import { DevTool } from "@hookform/devtools";
 import * as yup from "yup";
 import { useDispatch } from "react-redux";
 import { nanoid } from "nanoid";
-import dayjs from "dayjs";
 // components
 import RemoveNewField from "../../../common/button/remove-new-field/remove-new-field";
 import MetadaKeyField from "../../../common/button/metada-key-field/metada-key-field";
@@ -17,8 +16,12 @@ import InputFieldRemovable from "../../../common/form/input-field-removable";
 import AddNewField from "../../../common/button/add-new-field/add-new-field";
 import InputField from "../../../common/form/input-field";
 import Button from "../../../common/button/buttons";
+import Switcher from "../../../common/form/switcher";
 // store
 import { createCustomer } from "../../../../store/customer.store";
+// utils
+import DateNow from "../../../../utils/date-now";
+import AccordeonInitialState from "../../../../utils/accordeon-initial-state";
 
 const schema = yup.object().shape({
   name: yup
@@ -96,9 +99,9 @@ const CreateCustomer = () => {
     resolver: yupResolver(schema),
   });
 
-  const { register, control, handleSubmit, formState, reset } = form;
+  const { register, control, handleSubmit, formState, reset, watch } = form;
   const dispatch = useDispatch();
-  const { errors } = formState;
+  const { errors, isValid } = formState;
 
   const {
     fields: fieldInvoiceEmails,
@@ -127,27 +130,42 @@ const CreateCustomer = () => {
     control,
   });
 
-  const dateNow = dayjs().format("YYYY-MM-DD hh:mm");
-  console.log(dateNow);
-
   const transformData = (data) => {
     const newCustomer = {
       ...data,
       _id: nanoid(),
-      created_at: dateNow,
+      created_at: DateNow(),
       updated_at: "",
     };
     return newCustomer;
   };
 
   const onSubmit = (data) => {
-    console.log("data", data);
-    dispatch(createCustomer(transformData(data)));
+    dispatch(createCustomer(transformData(data))).then(reset());
   };
 
-  const handleCloseModal = () => {
-    reset()
-  }
+  const createCustomerModal = document.getElementById("createCustomer");
+  createCustomerModal?.addEventListener("hidden.bs.modal", function () {
+    AccordeonInitialState();
+    reset();
+  });
+
+  const handleAccordeonInitialState = () => {
+    AccordeonInitialState();
+  };
+  const banksAccountsCheckedArray = watch("org.bank_accounts");
+
+  const toggleChecked = (index) => {
+    console.log("index", index);
+
+    const watchIsDefault = watch(`org.bank_accounts.${index}.is_default`);
+    console.log(
+      "watchIsDefault",
+      `org.bank_accounts.${index} :`,
+      !watchIsDefault
+    );
+    return true;
+  };
 
   return (
     <>
@@ -156,7 +174,7 @@ const CreateCustomer = () => {
         noValidate
         className="create-customer__form"
       >
-        <div className="accordion" id="accordionExample">
+        <div className="accordion" id="accordionCreate">
           <div className="accordion-item">
             <h2 className="accordion-header" id="clientDetail">
               <button
@@ -174,7 +192,7 @@ const CreateCustomer = () => {
               id="collapseClientDetail"
               className="accordion-collapse collapse show"
               aria-labelledby="clientDetail"
-              data-bs-parent="#accordionExample"
+              data-bs-parent="#accordionCreate"
             >
               <div className="accordion-body">
                 <InputField
@@ -236,7 +254,7 @@ const CreateCustomer = () => {
               id="collapseOrganizationDetail"
               className="accordion-collapse collapse"
               aria-labelledby="organizationDetail"
-              data-bs-parent="#accordionExample"
+              data-bs-parent="#accordionCreate"
             >
               <div className="accordion-body">
                 <InputField
@@ -307,7 +325,7 @@ const CreateCustomer = () => {
               id="collapseBankAccounts"
               className="accordion-collapse collapse"
               aria-labelledby="bankAccounts"
-              data-bs-parent="#accordionExample"
+              data-bs-parent="#accordionCreate"
             >
               <div className="accordion-body">
                 {fieldBankAccounts.map((field, index) => {
@@ -319,11 +337,19 @@ const CreateCustomer = () => {
                             {...register(`org.bank_accounts.${index}.name`)}
                             name={`org.bank_accounts.${index}.name`}
                             register={register}
+                            type="text"
                             label="Название счета"
                             placeholder="Введите название счета"
-                            error={!!errors?.org?.bank_accounts[index]?.name}
+                            error={
+                              !!errors?.org?.bank_accounts
+                                ? !!errors?.org?.bank_accounts[index]?.name
+                                : ""
+                            }
                             errorMessage={
-                              errors?.org?.bank_accounts[index]?.name?.message
+                              !!errors?.org?.bank_accounts
+                                ? errors?.org?.bank_accounts[index]?.name
+                                    ?.message
+                                : ""
                             }
                           />
                           <InputField
@@ -336,12 +362,16 @@ const CreateCustomer = () => {
                             label="Номер счета"
                             placeholder="Введите номер счета"
                             error={
-                              !!errors?.org?.bank_accounts[index]
-                                ?.account_number
+                              !!errors?.org?.bank_accounts
+                                ? !!errors?.org?.bank_accounts[index]
+                                    ?.account_number
+                                : ""
                             }
                             errorMessage={
-                              errors?.org?.bank_accounts[index]?.account_number
-                                ?.message
+                              !!errors?.org?.bank_accounts
+                                ? errors?.org?.bank_accounts[index]
+                                    ?.account_number?.message
+                                : ""
                             }
                           />
                           <InputField
@@ -351,9 +381,16 @@ const CreateCustomer = () => {
                             type="number"
                             label="БИК счета"
                             placeholder="Введите БИК счета"
-                            error={!!errors?.org?.bank_accounts[index]?.bik}
+                            error={
+                              !!errors?.org?.bank_accounts
+                                ? !!errors?.org?.bank_accounts[index]?.bik
+                                : ""
+                            }
                             errorMessage={
-                              errors?.org?.bank_accounts[index]?.bik?.message
+                              !!errors?.org?.bank_accounts
+                                ? errors?.org?.bank_accounts[index]?.bik
+                                    ?.message
+                                : ""
                             }
                           />
                           <InputField
@@ -366,13 +403,32 @@ const CreateCustomer = () => {
                             label="Корр. номер счета"
                             placeholder="Введите коореспондентский номер счета"
                             error={
-                              !!errors?.org?.bank_accounts[index]
-                                ?.corr_account_number
+                              !!errors?.org?.bank_accounts
+                                ? !!errors?.org?.bank_accounts[index]
+                                    ?.corr_account_number
+                                : ""
                             }
                             errorMessage={
-                              errors?.org?.bank_accounts[index]
-                                ?.corr_account_number?.message
+                              !!errors?.org?.bank_accounts
+                                ? errors?.org?.bank_accounts[index]
+                                    ?.corr_account_number?.message
+                                : ""
                             }
+                          />
+
+                          <Switcher
+                            {...register(
+                              `org.bank_accounts.${index}.is_default`
+                            )}
+                            name="switcher"
+                            register={register}
+                            label="Дефолтный счёт"
+                            disabled={
+                              banksAccountsCheckedArray.length > 1
+                                ? false
+                                : true
+                            }
+                            onClick={() => toggleChecked(index)}
                           />
                         </div>
 
@@ -412,7 +468,7 @@ const CreateCustomer = () => {
               id="collapseInvoiceEmails"
               className="accordion-collapse collapse"
               aria-labelledby="invoiceEmails"
-              data-bs-parent="#accordionExample"
+              data-bs-parent="#accordionCreate"
             >
               <div className="accordion-body">
                 {fieldInvoiceEmails.map((field, index) => {
@@ -429,12 +485,14 @@ const CreateCustomer = () => {
                       key={index}
                       onClick={() => removeInvoiceEmails(index)}
                       error={
-                        errors?.invoice_emails?.length &&
-                        !!errors?.invoice_emails[index]?.email
+                        errors?.invoice_emails
+                          ? !!errors?.invoice_emails[index]?.email
+                          : ""
                       }
                       errorMessage={
-                        errors?.invoice_emails?.length &&
-                        errors?.invoice_emails[index]?.email?.message
+                        errors?.invoice_emails
+                          ? errors?.invoice_emails[index]?.email?.message
+                          : ""
                       }
                     />
                   );
@@ -463,7 +521,7 @@ const CreateCustomer = () => {
               id="collapseMeta"
               className="accordion-collapse collapse"
               aria-labelledby="meta"
-              data-bs-parent="#accordionExample"
+              data-bs-parent="#accordionCreate"
             >
               <div className="accordion-body">
                 <table className="table table-bordered border-secondary">
@@ -520,14 +578,22 @@ const CreateCustomer = () => {
             </div>
           </div>
         </div>
+
         <div className="d-flex justify-content-between pt-2 gap-1">
-          <Button type="submit" text="Отправить" styleBtn="primary" />
+          <Button
+            type="submit"
+            text="Создать"
+            styleBtn="primary"
+            dataBsDismiss="modal"
+            onClick={handleAccordeonInitialState}
+            disabled={!isValid}
+          />
           <Button
             type="button"
             text="Закрыть"
             styleBtn="danger"
             dataBsDismiss="modal"
-            onClick={handleCloseModal}
+            onClick={handleAccordeonInitialState}
           />
         </div>
       </form>
